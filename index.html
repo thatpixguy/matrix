@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <!-- Pull the engine from the Quintus CDN or load it locally -->
+    <!-- (use quintus-all.min.js for production) -->
+    <script src='http://cdn.html5quintus.com/v0.1.5/quintus-all.js'></script>
+    <!-- <script src='quintus-all.js'></script> -->
+  </head>
+   <body>
+     <script>
+     
+      // Now set up your game (most games will load a separate .js file)
+      var Q = Quintus({ development: true })                          // Create a new engine instance
+              .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
+
+      Q.setup()                           // Add a canvas element onto the page
+       .controls()                        // Add in default controls (keyboard, buttons)
+       .touch(Q.SPRITE_ALL);                          // Add in touch support (for the UI)
+              
+
+      Q.Sprite.extend("Block", {
+        init: function(p) {
+          this._super(p, {
+            scale: 1,
+            sheet: "blocks",
+            frame: 0,
+            gravity: 0,
+            vy: 40
+          });
+          this.add("2d");
+          this.on("touch",function(touch) {
+            // how to trigger something on my stage?
+            this.stage.trigger("swap",this);
+            console.log(touch.x,touch.y,this);
+          });
+        }
+      });
+
+      Q.Sprite.extend("Fallthrough", {
+        init: function(p) {
+          this._super(p,{
+            w: 5*32,
+            h: 6*32,
+          });
+          this.on("touch",function(touch) {
+            console.log("fallthrough touched");
+            x = Math.floor((touch.x)/32)*32+16;
+            Q.stage(1).trigger("place",{x:x,y:touch.y});
+          });
+        },
+        draw: function(ctx) {
+          ctx.strokeStyle = "red";
+          ctx.strokeRect(-this.p.cx,-this.p.cy,this.p.w,this.p.h);
+        }
+      });
+
+      Q.scene("fallthrough", function(stage) {
+        var fallthrough = stage.insert(new Q.Fallthrough({x: 3*32+16, y: 4*32}));
+      });
+
+      Q.scene("level1", function(stage) {
+
+        var block = stage.insert(new Q.Block({x: (32*1)+16, y: (32+16), frame: 0}));
+        var block2 = stage.insert(new Q.Block({x: (32*2)+16, y: (32+16), frame: 1}));
+        var block3 = stage.insert(new Q.Block({x: (32*3)+16, y: (32+16), frame: 2}));
+        var block4 = stage.insert(new Q.Block({x: (32*4)+16, y: (32+16), frame: 3}));
+        var block5 = stage.insert(new Q.Block({x: (32*5)+16, y: (32+16), frame: 4}));
+
+        Q.state.set("hand",null);
+
+        tileLayer = new Q.TileLayer({
+          tileW: 8*4,
+          tileH: 8*4,
+          sheet: "border",
+          dataAsset: "border.json"
+        });
+
+        stage.collisionLayer(tileLayer);
+
+        stage.on("swap",function(block) {
+          console.log("swap",block);
+          hand = Q.state.get("hand")
+          if(hand!=block) {
+            if(hand==null) {
+              block.p.x = 3*32+16;
+              block.p.y = 7*32+16;
+              block.p.vy = 0;
+              Q.state.set("hand",block);
+            } else {
+              hand.p.x = block.p.x;
+              hand.p.y = block.p.y;
+              hand.p.vy = block.p.vy;
+              block.p.x = 3*32+16;
+              block.p.y = 7*32+16;
+              block.p.vy = 0;
+              Q.state.set("hand",block);
+            }
+          }
+          stage.each(function(){if(this instanceof Q.Block){this.p.vy=40}});
+        });
+
+        stage.on("place",function(touch) {
+          console.log("place",touch);
+          hand = Q.state.get("hand")
+          if(hand!=null) {
+            hand.p.x = touch.x;
+            hand.p.y = touch.y;
+            hand.p.vy = 40;
+            Q.state.set("hand",null);
+          }
+        });
+
+      });
+
+      Q.load("blocks8x8x4.png, border.json", function() {
+
+        Q.sheet("blocks", "blocks8x8x4.png",
+                {
+                  tilew: 8*4,
+                  tileh: 8*4,
+                  sx: 0,
+                  sy: 0
+                });
+
+        Q.sheet("border", "blocks8x8x4.png",
+                {
+                  tilew: 8*4,
+                  tileh: 8*4,
+                  sx: 0,
+                  sy: 8*4 
+                });
+
+                       
+        Q.stageScene("fallthrough",0);
+        stage = Q.stageScene("level1",1);
+
+      });
+   </script>
+   </body>
+</html>
