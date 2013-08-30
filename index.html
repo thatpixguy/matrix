@@ -30,7 +30,22 @@
           this.on("touch",function(touch) {
             // how to trigger something on my stage?
             this.stage.trigger("swap",this);
-            console.log(touch.x,touch.y,this);
+            console.log(touch.x,touch.y,this.p);
+          });
+        }
+      });
+
+      Q.Sprite.extend("UIPull", {
+        init: function(p) {
+          this._super(p, {
+            sheet: "blocks",
+            frame: 6,
+            gravity: 0,
+            type: Q.SPRITE_UI
+          });
+          this.on("touch",function(touch) {
+            console.log("pull?");
+            Q.stage(1).trigger("pull");
           });
         }
       });
@@ -57,13 +72,20 @@
         var fallthrough = stage.insert(new Q.Fallthrough({x: 3*32+16, y: 4*32}));
       });
 
+      Q.scene("ui", function(stage) {
+        stage.insert(new Q.UIPull({x: (32*1)+16, y:(32*9)+16}));
+      });
+
       Q.scene("level1", function(stage) {
 
+        /*
         var block = stage.insert(new Q.Block({x: (32*1)+16, y: (32+16), frame: 0}));
         var block2 = stage.insert(new Q.Block({x: (32*2)+16, y: (32+16), frame: 1}));
         var block3 = stage.insert(new Q.Block({x: (32*3)+16, y: (32+16), frame: 2}));
         var block4 = stage.insert(new Q.Block({x: (32*4)+16, y: (32+16), frame: 3}));
         var block5 = stage.insert(new Q.Block({x: (32*5)+16, y: (32+16), frame: 4}));
+        */
+
 
         Q.state.set("hand",null);
 
@@ -75,6 +97,7 @@
         });
 
         stage.collisionLayer(tileLayer);
+
 
         stage.on("swap",function(block) {
           console.log("swap",block);
@@ -103,12 +126,25 @@
           hand = Q.state.get("hand")
           if(hand!=null) {
             hand.p.x = touch.x;
+            // slightly (but not completely) mitigate pushing blocks through the bottom of the level
+            obs = Q.stage(1).detect(function(){return (this.p.y-32)<touch.y && this.p.y>touch.y});
+            console.log(obs);
+            if(obs) {
+              touch.y = obs.p.y-32;
+            }
             hand.p.y = touch.y;
             hand.p.vy = 40;
             Q.state.set("hand",null);
           }
         });
 
+        stage.on("pull",function(){
+          for(i=0;i<5;i++) {
+            stage.insert(new Q.Block({x: (32*(i+1))+16, y: (32+16), frame: Math.floor(Math.random()*6)}));
+          }
+        });
+
+        stage.trigger("pull");
       });
 
       Q.load("blocks8x8x4.png, border.json", function() {
@@ -126,12 +162,13 @@
                   tilew: 8*4,
                   tileh: 8*4,
                   sx: 0,
-                  sy: 8*4 
+                  sy: 2*8*4 
                 });
 
                        
         Q.stageScene("fallthrough",0);
         stage = Q.stageScene("level1",1);
+        stage = Q.stageScene("ui",2);
 
       });
    </script>
