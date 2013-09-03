@@ -21,9 +21,9 @@ window.addEventListener("load",function() {
           collisionMask: Q.SPRITE_DEFAULT
         });
         //this.add("2d");
-        this.on("touchEnd",function(touch) {
+        this.on("touch",function(touch) {
           this.stage.trigger("swap",this);
-          //console.log(touch.x,touch.y,this.p);
+          console.log("touch",touch,this);
         });
         this.on("hit",function(col,last) {
           var magnitude = 0;
@@ -107,11 +107,13 @@ window.addEventListener("load",function() {
   Q.Sprite.extend("Fallthrough", {
     init: function(p) {
       this._super(p,{
+        x: 3*blockWidth+blockOffset, 
+        y: 4*blockWidth,
         w: 5*blockWidth,
-        h: 6*blockWidth,
+        h: 6*blockWidth
       });
       this.on("touch",function(touch) {
-        //console.log("fallthrough touched");
+        console.log("fallthrough touched");
         x = Math.floor((touch.x)/blockWidth)*blockWidth+blockOffset;
         Q.stage(1).trigger("place",{x:x,y:touch.y});
       });
@@ -123,7 +125,7 @@ window.addEventListener("load",function() {
   });
 
   Q.scene("fallthrough", function(stage) {
-    var fallthrough = stage.insert(new Q.Fallthrough({x: 3*blockWidth+blockOffset, y: 4*blockWidth}));
+    var fallthrough = stage.insert(new Q.Fallthrough());
   });
 
   Q.scene("ui", function(stage) {
