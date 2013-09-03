@@ -21,7 +21,7 @@ window.addEventListener("load",function() {
           collisionMask: Q.SPRITE_DEFAULT
         });
         //this.add("2d");
-        this.on("touch",function(touch) {
+        this.on("touchEnd",function(touch) {
           this.stage.trigger("swap",this);
           //console.log(touch.x,touch.y,this.p);
         });
