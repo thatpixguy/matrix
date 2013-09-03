@@ -1,3 +1,5 @@
+var blockWidth = 32;
+var blockOffset = 16;
 
 var Q = Quintus({ development: true })                          // Create a new engine instance
   .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
@@ -104,12 +106,12 @@ Q.Sprite.extend("UIPull", {
 Q.Sprite.extend("Fallthrough", {
   init: function(p) {
     this._super(p,{
-      w: 5*32,
-      h: 6*32,
+      w: 5*blockWidth,
+      h: 6*blockWidth,
     });
     this.on("touch",function(touch) {
       //console.log("fallthrough touched");
-      x = Math.floor((touch.x)/32)*32+16;
+      x = Math.floor((touch.x)/blockWidth)*blockWidth+blockOffset;
       Q.stage(1).trigger("place",{x:x,y:touch.y});
     });
   },
@@ -120,11 +122,11 @@ Q.Sprite.extend("Fallthrough", {
 });
 
 Q.scene("fallthrough", function(stage) {
-  var fallthrough = stage.insert(new Q.Fallthrough({x: 3*32+16, y: 4*32}));
+  var fallthrough = stage.insert(new Q.Fallthrough({x: 3*blockWidth+blockOffset, y: 4*blockWidth}));
 });
 
 Q.scene("ui", function(stage) {
-  stage.insert(new Q.UIPull({x: (32*1)+16, y:(32*9)+16}));
+  stage.insert(new Q.UIPull({x: (blockWidth*1)+blockOffset, y:(blockWidth*9)+blockOffset}));
 });
 
 Q.scene("level1", function(stage) {
@@ -159,16 +161,16 @@ Q.scene("level1", function(stage) {
     hand = Q.state.get("hand")
     if(hand!=block) {
       if(hand==null) {
-        block.p.x = 3*32+16;
-        block.p.y = 9*32+16;
+        block.p.x = 3*blockWidth+blockOffset;
+        block.p.y = 9*blockWidth+blockOffset;
         block.p.vy = 0;
         Q.state.set("hand",block);
       } else {
         hand.p.x = block.p.x;
         hand.p.y = block.p.y;
         hand.p.vy = block.p.vy;
-        block.p.x = 3*32+16;
-        block.p.y = 9*32+16;
+        block.p.x = 3*blockWidth+blockOffset;
+        block.p.y = 9*blockWidth+blockOffset;
         block.p.vy = 0;
         Q.state.set("hand",block);
       }
@@ -198,7 +200,7 @@ Q.scene("level1", function(stage) {
 
   stage.on("pull",function(){
     for(i=0;i<5;i++) {
-      stage.insert(new Q.Block({x: (32*(i+1))+16, y: (16), frame: Math.floor(Math.random()*6)}));
+      stage.insert(new Q.Block({x: (blockWidth*(i+1))+blockOffset, y: (blockOffset), frame: Math.floor(Math.random()*6)}));
     }
   });
 
@@ -311,8 +313,8 @@ Q.scene("level1", function(stage) {
   });
 
   stage.on("rest",function(block){
-    var x = Math.floor((block.p.x)/32)-1;
-    var y = Math.floor((block.p.y)/32)-1;
+    var x = Math.floor((block.p.x)/blockWidth)-1;
+    var y = Math.floor((block.p.y)/blockWidth)-1;
     //console.log("rest",x,y);
     if(block!=Q.state.get("hand")) {
       if(!this.rest[x]) this.rest[x] = [];
