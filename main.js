@@ -206,7 +206,17 @@ Q.scene("level1", function(stage) {
 
   stage.on("prestep",function(){
     //console.log("stage prestep",this.rest);
-    this.rest = [];
+    if(!this.rest) {
+      this.rest = [];
+    }
+    for(var i = 0; i < this.rest.length ; i++) {
+      if(!this.rest[i]) {
+        this.rest[i] = [];
+      }
+      for (var j = 0; j < this.rest[i].length ; j++) {
+        if(this.rest[i][j]) delete(this.rest[i][j]);
+      }
+    }
   });
   stage.on("poststep",function(){
     var maxX = this.rest.length;
