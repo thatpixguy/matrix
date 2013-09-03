@@ -5,7 +5,6 @@ var Q = Quintus({ development: true })                          // Create a new 
   .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
 
   Q.setup({maximize: true})                           // Add a canvas element onto the page
-   .controls()                        // Add in default controls (keyboard, buttons)
    .touch(Q.SPRITE_ALL);                          // Add in touch support (for the UI)
 
 
