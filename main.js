@@ -37,9 +37,7 @@ var Q = Quintus({ development: true })                          // Create a new 
         if(col.normalY < -0.3) { 
           if(p.vy > 0 && (col.obj == this.stage._collisionLayer || col.obj.p.vy == 0)) { 
             p.vy = 0; 
-            if(this!=Q.state.get("hand")) {
-              Q.stage(1).trigger("rest",this);
-            }
+            Q.stage(1).trigger("rest",this);
           }
           col.impact = impactY;
           p.x -= col.separate[0];
@@ -176,7 +174,7 @@ Q.scene("level1", function(stage) {
       }
     }
   // restart any stopped blocks
-  Q("Block",1).each(function(){this.p.vy=40});
+  //Q("Block",1).each(function(){this.p.vy=40});
   });
 
   stage.on("place",function(touch) {
@@ -221,9 +219,11 @@ Q.scene("level1", function(stage) {
   stage.on("poststep",function(){
     var maxX = this.rest.length;
     var maxY = Math.max.apply(null,this.rest.map(function(e){return e.length}).filter(function(e){return e!=null}));
-    //console.log("max",maxX,maxY);
-    // check for vert matches
 
+    // should probably be building a list of objects to destroy and then destroying them to allow for T shape combos.
+    // but this code seems to be allowing that anyhow.
+
+    // check for vert matches
     for(var i = 0; i<maxX ; i++) {
       var lastFrame = -1;
       var count = 1;
@@ -240,7 +240,6 @@ Q.scene("level1", function(stage) {
           // change of block type
           //if count was >=3
           if (count>=3) {
-            //console.log(i,j,count); debugger;
             // match those blocks
             for(; count>0; count--) {
               this.rest[i][j-count].destroy();
@@ -252,24 +251,73 @@ Q.scene("level1", function(stage) {
       }
       // at the end of the column(?)
       if (count>=3) {
-
-        //console.log(i,j,count); debugger;
-
         // match those blocks
         for(; count>0; count--) {
           this.rest[i][j-count].destroy();
         }
       }
     }
-    //console.log("poststep",maxX,maxY);
+
+    // check for horiz matches
+    for(var j = 0; j<maxY ; j++) {
+      var lastFrame = -1;
+      var count = 1;
+      for(var i = 0; i < maxX ; i++) {
+        var thisFrame = -1;
+        var thisBlock = undefined;
+        if(this.rest[i] && (thisBlock = this.rest[i][j])) {
+          thisFrame = thisBlock.p.frame;
+        }
+
+        if ((thisFrame!=-1) && (thisFrame==lastFrame)) {
+          count++;
+        } else {
+          // change of block type
+          //if count was >=3
+          if (count>=3) {
+            // match those blocks
+            for(; count>0; count--) {
+              this.rest[i-count][j].destroy();
+            }
+          }
+          count = 1;
+        }
+        lastFrame = thisFrame;
+      }
+      // at the end of the column(?)
+      if (count>=3) {
+        // match those blocks
+        for(; count>0; count--) {
+          this.rest[i-count][j].destroy();
+        }
+      }
+    }
+
+    // make floating blocks fall
+    for(var i=0;i<maxX;i++) {
+      var falling = false;
+      for(var j=maxY-1;j>=0;j--) {
+        var thisBlock = undefined;
+        if(this.rest[i] && (thisBlock = this.rest[i][j])) {
+          if(falling) {
+            thisBlock.p.vy = 40;
+          }
+        } else {
+          falling = true;
+        }
+      }
+    }
+
   });
 
   stage.on("rest",function(block){
     var x = Math.floor((block.p.x)/32)-1;
     var y = Math.floor((block.p.y)/32)-1;
     //console.log("rest",x,y);
-    if(!this.rest[x]) this.rest[x] = [];
-    this.rest[x][y] = block;
+    if(block!=Q.state.get("hand")) {
+      if(!this.rest[x]) this.rest[x] = [];
+      this.rest[x][y] = block;
+    }
   });
 
   stage.trigger("pull");
