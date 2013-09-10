@@ -9,6 +9,9 @@ window.addEventListener("load",function() {
     Q.setup({maximize: true})                           // Add a canvas element onto the page
      .touch(Q.SPRITE_ALL);                          // Add in touch support (for the UI)
 
+    if(Q.input.touchEnabled) {
+      Q.input.disableMouseControls();
+    }
 
     Q.Sprite.extend("Block", {
       init: function(p) {
