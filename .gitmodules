@@ -1,0 +1,3 @@
+[submodule "quintus"]
+	path = quintus
+	url = https://github.com/thatpixguy/Quintus.git
