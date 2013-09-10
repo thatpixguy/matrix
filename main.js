@@ -10,6 +10,7 @@ window.addEventListener("load",function() {
      .touch(Q.SPRITE_ALL);                          // Add in touch support (for the UI)
 
     if(Q.input.touchEnabled) {
+      console.log("removing mouse controls");
       Q.input.disableMouseControls();
     }
 
