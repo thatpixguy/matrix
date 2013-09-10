@@ -3,16 +3,12 @@ window.addEventListener("load",function() {
   var blockWidth = 32;
   var blockOffset = 16;
 
-  var Q = Quintus({ development: true })                          // Create a new engine instance
+
+  Q = Quintus({ development: true })                          // Create a new engine instance
     .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
 
     Q.setup({maximize: true})                           // Add a canvas element onto the page
-     .touch(Q.SPRITE_ALL);                          // Add in touch support (for the UI)
-
-    if(Q.input.touchEnabled) {
-      console.log("removing mouse controls");
-      Q.input.disableMouseControls();
-    }
+     .touch(Q.SPRITE_ALL);
 
     Q.Sprite.extend("Block", {
       init: function(p) {
@@ -356,4 +352,6 @@ window.addEventListener("load",function() {
     Q.stageScene("ui",2);
 
   });
+
+  console.log(Q);
 });
