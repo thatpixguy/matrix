@@ -168,8 +168,8 @@ window.addEventListener("load",function() {
     Q.state.set("hand",null);
 
     var tileLayer = new Q.TileLayer({
-        tileW: 8*4,
-        tileH: 8*4,
+        tileW: blockWidth,
+        tileH: blockHeight,
         sheet: "border",
         dataAsset: "border.json"
     });
@@ -349,18 +349,18 @@ window.addEventListener("load",function() {
 
     Q.sheet("blocks", "blocks8x8x4.png",
       {
-        tilew: 8*4,
-        tileh: 8*4,
-        sx: 0,
-        sy: 0
+        tilew: blockWidth,
+        tileh: blockHeight,
+        sx: 0*blockWidth,
+        sy: 0*blockHeight
       });
 
     Q.sheet("border", "blocks8x8x4.png",
       {
-        tilew: 8*4,
-        tileh: 8*4,
-        sx: 0,
-        sy: 2*8*4 
+        tilew: blockWidth,
+        tileh: blockHeight,
+        sx: 0*blockWidth,
+        sy: 2*blockHeight 
       });
 
 
