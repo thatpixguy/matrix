@@ -13,6 +13,8 @@ window.addEventListener("load",function() {
   var boardX = 3*blockWidth + blockCX;
   var boardY = 4*blockHeight;
 
+  var fallRate = 40;
+
   Q = Quintus({ development: true })                          // Create a new engine instance
     .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
 
@@ -26,7 +28,7 @@ window.addEventListener("load",function() {
           frame: 0,
           gravity: 0,
           vx: 0,
-          vy: 40,
+          vy: fallRate,
           collisionMask: Q.SPRITE_DEFAULT
         });
         //this.add("2d");
@@ -211,7 +213,7 @@ window.addEventListener("load",function() {
            }
          */
         hand.p.y = touch.y;
-        hand.p.vy = 40;
+        hand.p.vy = fallRate;
         Q.state.set("hand",null);
       }
     });
@@ -320,7 +322,7 @@ window.addEventListener("load",function() {
           var thisBlock = undefined;
           if(this.rest[i] && (thisBlock = this.rest[i][j])) {
             if(falling) {
-              thisBlock.p.vy = 40;
+              thisBlock.p.vy = fallRate;
             }
           } else {
             falling = true;
