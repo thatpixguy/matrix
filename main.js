@@ -1,8 +1,17 @@
 window.addEventListener("load",function() {
 
   var blockWidth = 32;
+  var blockHeight = blockWidth;
   var blockOffset = 16;
+  var blockCX = blockOffset;
+  var blockCY = blockOffset;
 
+  // playing area
+  var boardWidth = 5*blockWidth;
+  var boardHeight = 6*blockHeight;
+  // centre
+  var boardX = 3*blockWidth + blockCX;
+  var boardY = 4*blockHeight;
 
   Q = Quintus({ development: true })                          // Create a new engine instance
     .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
@@ -80,6 +89,7 @@ window.addEventListener("load",function() {
             this.p.y += this.p.vy * dt;
             //console.log(this.p.x,this.p.y);
             this.stage.collide(this);
+            this.stage.stack(this);
             dtStep -= dt;
           }
           if(this.p.vy == 0) {
@@ -107,10 +117,10 @@ window.addEventListener("load",function() {
   Q.Sprite.extend("Fallthrough", {
     init: function(p) {
       this._super(p,{
-        x: 3*blockWidth+blockOffset, 
-        y: 4*blockWidth,
-        w: 5*blockWidth,
-        h: 6*blockWidth
+        x: boardX, 
+        y: boardY,
+        w: boardWidth,
+        h: boardHeight
       });
       this.on("touch",function(touch) {
         console.log("fallthrough touched");
@@ -144,20 +154,25 @@ window.addEventListener("load",function() {
 
     stage.rest = [];
 
+    // our very limited (and hopefully faster) version of collide
+    
+    stage.stack = function(block) {
+      //console.log("stack",block);
+      var x = Math.floor((block.p.x)/blockWidth)-1;
+      var y = Math.floor((block.p.y)/blockWidth)-1;
+      
+    }
+
     Q.state.set("hand",null);
 
     var tileLayer = new Q.TileLayer({
-      tileW: 8*4,
+        tileW: 8*4,
         tileH: 8*4,
         sheet: "border",
         dataAsset: "border.json"
     });
 
     stage.collisionLayer(tileLayer);
-
-    stage.on("check",function(block) {
-
-    });
 
     stage.on("swap",function(block) {
       //console.log("swap",block);
