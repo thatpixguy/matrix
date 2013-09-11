@@ -12,6 +12,11 @@ window.addEventListener("load",function() {
   // centre
   var boardX = 3*blockWidth + blockCX;
   var boardY = 4*blockHeight;
+  var boardCX = boardWidth/2;
+  var boardCY = boardHeight/2;
+
+  var handX = 3*blockWidth+blockCX;
+  var handY = 9*blockWidth+blockCY;
 
   var fallRate = 40;
 
@@ -146,13 +151,6 @@ window.addEventListener("load",function() {
 
   Q.scene("level1", function(stage) {
 
-    /*
-       var block = stage.insert(new Q.Block({x: (32*1)+16, y: (32+16), frame: 0}));
-       var block2 = stage.insert(new Q.Block({x: (32*2)+16, y: (32+16), frame: 1}));
-       var block3 = stage.insert(new Q.Block({x: (32*3)+16, y: (32+16), frame: 2}));
-       var block4 = stage.insert(new Q.Block({x: (32*4)+16, y: (32+16), frame: 3}));
-       var block5 = stage.insert(new Q.Block({x: (32*5)+16, y: (32+16), frame: 4}));
-     */
 
     stage.rest = [];
 
@@ -181,16 +179,16 @@ window.addEventListener("load",function() {
       hand = Q.state.get("hand")
       if(hand!=block) {
         if(hand==null) {
-          block.p.x = 3*blockWidth+blockOffset;
-          block.p.y = 9*blockWidth+blockOffset;
+          block.p.x = handX; 
+          block.p.y = handY; 
           block.p.vy = 0;
           Q.state.set("hand",block);
         } else {
           hand.p.x = block.p.x;
           hand.p.y = block.p.y;
           hand.p.vy = block.p.vy;
-          block.p.x = 3*blockWidth+blockOffset;
-          block.p.y = 9*blockWidth+blockOffset;
+          block.p.x = handX;
+          block.p.y = handY;
           block.p.vy = 0;
           Q.state.set("hand",block);
         }
@@ -220,7 +218,7 @@ window.addEventListener("load",function() {
 
     stage.on("pull",function(){
       for(i=0;i<5;i++) {
-        stage.insert(new Q.Block({x: (blockWidth*(i+1))+blockOffset, y: (blockOffset), frame: Math.floor(Math.random()*6)}));
+        stage.insert(new Q.Block({x: (boardX-boardCX)+(blockWidth*i)+blockOffset, y: (boardY-boardCY)+blockOffset, frame: Math.floor(Math.random()*6)}));
       }
     });
 
@@ -333,8 +331,8 @@ window.addEventListener("load",function() {
     });
 
     stage.on("rest",function(block){
-      var x = Math.floor((block.p.x)/blockWidth)-1;
-      var y = Math.floor((block.p.y)/blockWidth)-1;
+      var x = Math.floor((block.p.x-(boardX-boardCX))/blockWidth);
+      var y = Math.floor((block.p.y-(boardY-boardCY))/blockWidth);
       //console.log("rest",x,y);
       if(block!=Q.state.get("hand")) {
         if(!this.rest[x]) this.rest[x] = [];
