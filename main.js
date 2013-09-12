@@ -63,12 +63,9 @@ window.addEventListener("load",function() {
             this.p.y += this.p.vy * dt;
             //console.log(this.p.x,this.p.y);
             //this.stage.collide(this);
-            this.stage.stack(this);
             dtStep -= dt;
           }
-          if(this.p.vy == 0) {
-            this.stage.trigger("rest",this);
-          }
+          this.stage.stack(this);
         });
       },
     });
@@ -133,6 +130,7 @@ window.addEventListener("load",function() {
 
       if(!this.columns[column]) this.columns[column] = [];
       this.columns[column].push(block);
+      //console.log("after stack length=",column,this.columns[column].length);
     }
 
     // probably called from poststep
@@ -148,14 +146,22 @@ window.addEventListener("load",function() {
       for(var i=0;i<this.columns.length;i++) {
         // start at the end of the array (lowest blocks)
         var lastTopY = boardY+boardCY;
+        //console.log("col lastTopY",i,lastTopY,this.columns[i].length);
         var lastVY = 0;
         for(var j=this.columns[i].length-1;j>=0;j--) {
           var block = this.columns[i][j];
           var bottomY = block.p.y+blockCY;
+          //console.log("lastTopY",i,j,lastTopY,block.p.y);
           if(bottomY>lastTopY) {
             // move up
+            //console.log("moveup",bottomY,lastTopY,block);
             block.p.y=lastTopY-blockCY;
             block.p.vy=lastVY;
+          } else if(bottomY<lastTopY) {
+            block.p.vy=fallRate;
+          }
+          if(block.p.vy==0) {
+            this.trigger("rest",block);
           }
           lastTopY = block.p.y-blockCY;
           lastVY = block.p.vy;
@@ -198,11 +204,11 @@ window.addEventListener("load",function() {
     });
 
     stage.on("place",function(touch) {
-      console.log("place",touch);
+      //console.log("place",touch);
       var hand = Q.state.get("hand")
       if(hand!=null) {
         hand.p.x = columnToScreenX(screenXToColumn(touch.x));
-        console.log("hand",hand.p);
+        //console.log("hand",hand.p);
         // slightly (but not completely) mitigate pushing blocks through the bottom of the level
         /*
            obs = Q.stage(1).detect(function(){return (this.p.y-32)<touch.y && this.p.y>touch.y});
@@ -241,19 +247,23 @@ window.addEventListener("load",function() {
     stage.clearColumns = function() {
       // clear out column arrays
       if(!this.columns) {
+        //console.log("make columns");
         this.columns = [];
       }
       for(var i=0; i< this.columns.length ; i++) {
         if(!this.columns[i]) {
+          
+          //console.log("make column",i);
           this.columns[i] = [];
         } else {
+          //console.log("zeroing column",i);
           this.columns[i].length = 0;
         }
       }
     }
 
     stage.on("prestep",function(){
-      //console.log("stage prestep",this.rest);
+      //console.log("stage prestep");
       this.clearRest();
       this.clearColumns();
     });
@@ -337,6 +347,7 @@ window.addEventListener("load",function() {
         }
       }
 
+      /*
       // make floating blocks fall
       for(var i=0;i<maxX;i++) {
         var falling = false;
@@ -351,6 +362,7 @@ window.addEventListener("load",function() {
           }
         }
       }
+      */
 
     }
 
@@ -398,5 +410,4 @@ window.addEventListener("load",function() {
 
   });
 
-  console.log(Q);
 });
