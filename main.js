@@ -18,6 +18,18 @@ window.addEventListener("load",function() {
   var handX = 3*blockWidth+blockCX;
   var handY = 9*blockWidth+blockCY;
 
+  function screenXToColumn(screenX) {
+    return Math.floor(screenX/blockWidth)-1;
+  }
+
+  function columnToScreenX(column) {
+    return boardX-boardCX+(column*blockWidth)+blockCX;
+  }
+
+  function screenYToRow(screenY) {
+    return Math.floor((screenY-(boardY-boardCY))/blockWidth);
+  }
+
   var fallRate = 40;
 
   Q = Quintus({ development: true })                          // Create a new engine instance
@@ -41,52 +53,7 @@ window.addEventListener("load",function() {
           this.stage.trigger("swap",this);
           console.log("touch",touch,this);
         });
-        this.on("hit",function(col,last) {
-          var magnitude = 0;
-          var p = this.p;
-          col.impact = 0;
-          var impactX = Math.abs(p.vx);
-          var impactY = Math.abs(p.vy);
 
-          //console.log("hit");
-
-          //p.x -= col.separate[0];
-          //p.y -= col.separate[1];
-
-          if(col.normalY < -0.3) { 
-            if(p.vy > 0 && (col.obj == this.stage._collisionLayer || col.obj.p.vy == 0)) { 
-              p.vy = 0; 
-              Q.stage(1).trigger("rest",this);
-            }
-            col.impact = impactY;
-            p.x -= col.separate[0];
-            p.y -= col.separate[1];
-
-            this.trigger("bump.bottom",col);
-          }
-          if(col.normalY > 0.3) {
-            if(p.vy < 0) { p.vy = 0; }
-            col.impact = impactY;
-            p.x -= col.separate[0];
-            // don't move down if bumped from above
-            this.trigger("bump.top",col);
-          }
-
-          if(col.normalX < -0.3) { 
-            if(p.vx > 0) { p.vx = 0;  }
-            col.impact = impactX;
-            p.x -= col.separate[0];
-            p.y -= col.separate[1];
-            this.trigger("bump.right",col);
-          }
-          if(col.normalX > 0.3) { 
-            if(p.vx < 0) { p.vx = 0; }
-            col.impact = impactX;
-            p.x -= col.separate[0];
-            p.y -= col.separate[1];
-            this.trigger("bump.left",col);
-          }
-        });
         this.on("step",function(dt) {
           //console.log("block step");
           var dtStep = dt;
@@ -95,7 +62,7 @@ window.addEventListener("load",function() {
             this.p.x += this.p.vx * dt;
             this.p.y += this.p.vy * dt;
             //console.log(this.p.x,this.p.y);
-            this.stage.collide(this);
+            //this.stage.collide(this);
             this.stage.stack(this);
             dtStep -= dt;
           }
@@ -131,8 +98,8 @@ window.addEventListener("load",function() {
       });
       this.on("touch",function(touch) {
         console.log("fallthrough touched");
-        x = Math.floor((touch.x)/blockWidth)*blockWidth+blockOffset;
-        Q.stage(1).trigger("place",{x:x,y:touch.y});
+        //x = Math.floor((touch.x)/blockWidth)*blockWidth+blockOffset;
+        Q.stage(1).trigger("place",touch);
       });
     },
     draw: function(ctx) {
@@ -153,14 +120,47 @@ window.addEventListener("load",function() {
 
 
     stage.rest = [];
+    stage.columns = [];
 
     // our very limited (and hopefully faster) version of collide
-    
     stage.stack = function(block) {
       //console.log("stack",block);
-      var x = Math.floor((block.p.x)/blockWidth)-1;
+      if(Q.state.get("hand")==block) {
+        return;
+      }
+      var column = screenXToColumn(block.p.x);
       var y = Math.floor((block.p.y)/blockWidth)-1;
-      
+
+      if(!this.columns[column]) this.columns[column] = [];
+      this.columns[column].push(block);
+    }
+
+    // probably called from poststep
+    stage.sortColumns = function() {
+      for(var i = 0; i<this.columns.length; i++) {
+        this.columns[i].sort(function(a,b){
+          return a.p.y-b.p.y
+        });
+      }
+    }
+
+    stage.collideColumns = function() {
+      for(var i=0;i<this.columns.length;i++) {
+        // start at the end of the array (lowest blocks)
+        var lastTopY = boardY+boardCY;
+        var lastVY = 0;
+        for(var j=this.columns[i].length-1;j>=0;j--) {
+          var block = this.columns[i][j];
+          var bottomY = block.p.y+blockCY;
+          if(bottomY>lastTopY) {
+            // move up
+            block.p.y=lastTopY-blockCY;
+            block.p.vy=lastVY;
+          }
+          lastTopY = block.p.y-blockCY;
+          lastVY = block.p.vy;
+        }
+      }
     }
 
     Q.state.set("hand",null);
@@ -198,16 +198,17 @@ window.addEventListener("load",function() {
     });
 
     stage.on("place",function(touch) {
-      //console.log("place",touch);
+      console.log("place",touch);
       var hand = Q.state.get("hand")
       if(hand!=null) {
-        hand.p.x = touch.x;
+        hand.p.x = columnToScreenX(screenXToColumn(touch.x));
+        console.log("hand",hand.p);
         // slightly (but not completely) mitigate pushing blocks through the bottom of the level
         /*
            obs = Q.stage(1).detect(function(){return (this.p.y-32)<touch.y && this.p.y>touch.y});
            console.log(obs);
            if(obs) {
-           touch.y = obs.p.y-32;
+             touch.y = obs.p.y-32;
            }
          */
         hand.p.y = touch.y;
@@ -222,8 +223,8 @@ window.addEventListener("load",function() {
       }
     });
 
-    stage.on("prestep",function(){
-      //console.log("stage prestep",this.rest);
+    stage.clearRest = function() {
+      // clear out rest array
       if(!this.rest) {
         this.rest = [];
       }
@@ -235,8 +236,31 @@ window.addEventListener("load",function() {
           if(this.rest[i][j]) delete(this.rest[i][j]);
         }
       }
+    }
+
+    stage.clearColumns = function() {
+      // clear out column arrays
+      if(!this.columns) {
+        this.columns = [];
+      }
+      for(var i=0; i< this.columns.length ; i++) {
+        if(!this.columns[i]) {
+          this.columns[i] = [];
+        } else {
+          this.columns[i].length = 0;
+        }
+      }
+    }
+
+    stage.on("prestep",function(){
+      //console.log("stage prestep",this.rest);
+      this.clearRest();
+      this.clearColumns();
     });
-    stage.on("poststep",function(){
+
+    
+
+    stage.checkRest = function(){
       var maxX = this.rest.length;
       var maxY = Math.max.apply(null,this.rest.map(function(e){return e.length}).filter(function(e){return e!=null}));
 
@@ -328,11 +352,17 @@ window.addEventListener("load",function() {
         }
       }
 
-    });
+    }
 
+    stage.on("poststep",function(){
+      this.sortColumns();
+      this.collideColumns();
+      this.checkRest();
+    });
+      
     stage.on("rest",function(block){
-      var x = Math.floor((block.p.x-(boardX-boardCX))/blockWidth);
-      var y = Math.floor((block.p.y-(boardY-boardCY))/blockWidth);
+      var x = screenXToColumn(block.p.x);
+      var y = screenYToRow(block.p.y);
       //console.log("rest",x,y);
       if(block!=Q.state.get("hand")) {
         if(!this.rest[x]) this.rest[x] = [];
