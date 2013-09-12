@@ -18,6 +18,10 @@ window.addEventListener("load",function() {
   var handX = 3*blockWidth+blockCX;
   var handY = 9*blockWidth+blockCY;
 
+  var pullTimer;
+
+  var blocked = false;
+
   function screenXToColumn(screenX) {
     return Math.floor(screenX/blockWidth)-1;
   }
@@ -100,8 +104,8 @@ window.addEventListener("load",function() {
       });
     },
     draw: function(ctx) {
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(-this.p.cx,-this.p.cy,this.p.w,this.p.h);
+      //ctx.strokeStyle = "red";
+      //ctx.strokeRect(-this.p.cx,-this.p.cy,this.p.w,this.p.h);
     }
   });
 
@@ -143,6 +147,7 @@ window.addEventListener("load",function() {
     }
 
     stage.collideColumns = function() {
+      blocked = false;
       for(var i=0;i<this.columns.length;i++) {
         // start at the end of the array (lowest blocks)
         var lastTopY = boardY+boardCY;
@@ -165,6 +170,9 @@ window.addEventListener("load",function() {
           }
           lastTopY = block.p.y-blockCY;
           lastVY = block.p.vy;
+        }
+        if(lastTopY<(boardY-boardCY)) {
+          blocked = true;
         }
       }
     }
@@ -224,9 +232,14 @@ window.addEventListener("load",function() {
     });
 
     stage.on("pull",function(){
-      for(i=0;i<5;i++) {
-        stage.insert(new Q.Block({x: (boardX-boardCX)+(blockWidth*i)+blockOffset, y: (boardY-boardCY)+blockOffset, frame: Math.floor(Math.random()*6)}));
+      // at this point, columns arent sorted
+      if(blocked) {
+        return;
       }
+      for(var i=0;i<5;i++) {
+        stage.insert(new Q.Block({x: (boardX-boardCX)+(blockWidth*i)+blockOffset, y: (boardY-boardCY)-blockOffset, frame: Math.floor(Math.random()*6)}));
+      }
+      pullTimer = 8;
     });
 
     stage.clearRest = function() {
@@ -268,7 +281,12 @@ window.addEventListener("load",function() {
       this.clearColumns();
     });
 
-    
+    stage.on("step",function(dt){
+      pullTimer-=dt;
+      if(pullTimer<0) {
+        this.trigger("pull");
+      }
+    });    
 
     stage.checkRest = function(){
       var maxX = this.rest.length;
