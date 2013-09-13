@@ -34,13 +34,13 @@ window.addEventListener("load",function() {
     return Math.floor((screenY-(boardY-boardCY))/blockWidth);
   }
 
-  var fallRate = 40;
+  var fallRate = 50;
 
   Q = Quintus({ development: true })                          // Create a new engine instance
     .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
 
     Q.setup({maximize: true})                           // Add a canvas element onto the page
-     .touch(Q.SPRITE_ALL);
+     .touch(Q.SPRITE_ALL,[3,1,0]);
 
     Q.Sprite.extend("Block", {
       init: function(p) {
@@ -82,10 +82,6 @@ window.addEventListener("load",function() {
         gravity: 0,
         type: Q.SPRITE_UI
       });
-      this.on("touch",function(touch) {
-        //console.log("pull?");
-        Q.stage(1).trigger("pull");
-      });
     }
   });
 
@@ -113,9 +109,6 @@ window.addEventListener("load",function() {
     var fallthrough = stage.insert(new Q.Fallthrough());
   });
 
-  Q.scene("ui", function(stage) {
-    stage.insert(new Q.UIPull({x: (blockWidth*1)+blockOffset, y:(blockWidth*9)+blockOffset}));
-  });
 
   Q.scene("level1", function(stage) {
 
@@ -163,7 +156,11 @@ window.addEventListener("load",function() {
             block.p.y=lastTopY-blockCY;
             block.p.vy=lastVY;
           } else if(bottomY<lastTopY) {
-            block.p.vy=fallRate;
+            if(block.p.y-blockCY<boardY-boardCY) {
+              block.p.vy=fallRate/3;
+            } else {
+              block.p.vy=fallRate;
+            }
           }
           if(block.p.vy==0) {
             this.trigger("rest",block);
@@ -179,14 +176,6 @@ window.addEventListener("load",function() {
 
     Q.state.set("hand",null);
 
-    var tileLayer = new Q.TileLayer({
-        tileW: blockWidth,
-        tileH: blockHeight,
-        sheet: "border",
-        dataAsset: "border.json"
-    });
-
-    stage.collisionLayer(tileLayer);
 
     stage.on("swap",function(block) {
       //console.log("swap",block);
@@ -403,6 +392,29 @@ window.addEventListener("load",function() {
     stage.trigger("pull");
   });
 
+  Q.scene("border", function(stage) {
+
+    var tileLayer = new Q.TileLayer({
+        tileW: blockWidth,
+        tileH: blockHeight,
+        sheet: "border",
+        dataAsset: "border.json"
+    });
+
+    stage.collisionLayer(tileLayer);
+
+
+  });
+
+  Q.scene("ui", function(stage) {
+    var pull = stage.insert(new Q.UIPull({x: (blockWidth*1)+blockOffset, y:(blockWidth*9)+blockOffset}));
+    pull.on("touch",function(touch) {
+      console.log("pull?");
+      Q.stage(1).trigger("pull");
+    });
+  });
+
+
   Q.load("blocks8x8x4.png, border.json", function() {
 
     Q.sheet("blocks", "blocks8x8x4.png",
@@ -424,7 +436,8 @@ window.addEventListener("load",function() {
 
     Q.stageScene("fallthrough",0);
     Q.stageScene("level1",1);
-    Q.stageScene("ui",2);
+    Q.stageScene("border",2);
+    Q.stageScene("ui",3);
 
   });
 
