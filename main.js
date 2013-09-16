@@ -11,12 +11,14 @@ window.addEventListener("load",function() {
   var boardHeight = 6*blockHeight;
   // centre
   var boardX = 3*blockWidth + blockCX;
-  var boardY = 4*blockHeight;
+  var boardY = 7*blockHeight;
   var boardCX = boardWidth/2;
   var boardCY = boardHeight/2;
 
   var handX = 3*blockWidth+blockCX;
-  var handY = 9*blockWidth+blockCY;
+  var handY = 1*blockWidth+blockCY;
+
+  var score = 0;
 
   var pullTimer;
 
@@ -284,6 +286,8 @@ window.addEventListener("load",function() {
       // should probably be building a list of objects to destroy and then destroying them to allow for T shape combos.
       // but this code seems to be allowing that anyhow.
 
+      var matches = 0;
+
       // check for vert matches
       for(var i = 0; i<maxX ; i++) {
         var lastFrame = -1;
@@ -295,6 +299,7 @@ window.addEventListener("load",function() {
             thisFrame = thisBlock.p.frame;
           }
 
+
           if ((thisFrame!=-1) && (thisFrame==lastFrame)) {
             count++;
           } else {
@@ -302,6 +307,7 @@ window.addEventListener("load",function() {
             //if count was >=3
             if (count>=3) {
               // match those blocks
+              matches+=count;
               for(; count>0; count--) {
                 this.rest[i][j-count].destroy();
               }
@@ -313,6 +319,7 @@ window.addEventListener("load",function() {
         // at the end of the column(?)
         if (count>=3) {
           // match those blocks
+          matches+=count;
           for(; count>0; count--) {
             this.rest[i][j-count].destroy();
           }
@@ -337,6 +344,7 @@ window.addEventListener("load",function() {
             //if count was >=3
             if (count>=3) {
               // match those blocks
+              matches+=count;
               for(; count>0; count--) {
                 this.rest[i-count][j].destroy();
               }
@@ -348,10 +356,15 @@ window.addEventListener("load",function() {
         // at the end of the column(?)
         if (count>=3) {
           // match those blocks
+          matches+=count;
           for(; count>0; count--) {
             this.rest[i-count][j].destroy();
           }
         }
+      }
+
+      if(matches>0) {
+        Q.stage(3).trigger("addscore",Math.pow(matches-2,2));
       }
 
       /*
@@ -383,7 +396,7 @@ window.addEventListener("load",function() {
       var x = screenXToColumn(block.p.x);
       var y = screenYToRow(block.p.y);
       //console.log("rest",x,y);
-      if(block!=Q.state.get("hand")) {
+      if(block!=Q.state.get("hand") && !block.isDestroyed) {
         if(!this.rest[x]) this.rest[x] = [];
         this.rest[x][y] = block;
       }
@@ -407,10 +420,26 @@ window.addEventListener("load",function() {
   });
 
   Q.scene("ui", function(stage) {
-    var pull = stage.insert(new Q.UIPull({x: (blockWidth*1)+blockOffset, y:(blockWidth*9)+blockOffset}));
+    var pull = stage.insert(new Q.UIPull({x: (blockWidth*5)+blockOffset, y:(blockHeight*1)+blockOffset}));
     pull.on("touch",function(touch) {
       console.log("pull?");
       Q.stage(1).trigger("pull");
+    });
+    var scoreText = stage.insert(new Q.UI.Text({
+      label: "score: 0",
+      x: (blockWidth*3)+blockOffset,
+      y: (blockHeight*3),
+      color: "white"
+    }));
+    stage.on("setscore",function(newScore){
+      score = newScore;
+      scoreText.p.label = "score: "+newScore;
+    });
+    stage.on("addscore",function(newScore){
+      //console.log("addscore called "+newScore);
+      score += newScore;
+      //console.log("score:"+score);
+      scoreText.p.label = "score: "+score;
     });
   });
 
