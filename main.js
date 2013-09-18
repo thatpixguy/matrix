@@ -39,12 +39,12 @@ window.addEventListener("load",function() {
   var fallRate = 50;
 
   Q = Quintus({ development: true })                          // Create a new engine instance
-    .include("Sprites, Scenes, Input, 2D, Touch, UI") // Load any needed modules
+    .include("Sprites, Scenes, Input, 2D, Touch, UI, Anim") // Load any needed modules
 
     // Add a canvas element onto the page
     Q.setup({width: 7*blockWidth, height:11*blockHeight, maximize:true})        
 
-    Q.touch(Q.SPRITE_ALL,[3,1,0]);
+    Q.touch(Q.SPRITE_DEFAULT | Q.SPRITE_UI,[3,1,0]);
 
     Q.Sprite.extend("Block", {
       init: function(p) {
@@ -54,7 +54,7 @@ window.addEventListener("load",function() {
           gravity: 0,
           vx: 0,
           vy: fallRate,
-          collisionMask: Q.SPRITE_DEFAULT
+          type: Q.SPRITE_DEFAULT
         });
         //this.add("2d");
         this.on("touch",function(touch) {
@@ -95,7 +95,8 @@ window.addEventListener("load",function() {
         x: boardX, 
         y: boardY,
         w: boardWidth,
-        h: boardHeight
+        h: boardHeight,
+        type: Q.SPRITE_UI
       });
       this.on("touch",function(touch) {
         console.log("fallthrough touched");
@@ -442,6 +443,20 @@ window.addEventListener("load",function() {
       score += newScore;
       //console.log("score:"+score);
       scoreText.p.label = "score: "+score;
+      var award = new Q.UI.Text({ 
+        label: "+"+newScore, 
+          x: (blockWidth*3)+blockOffset, 
+          y: (blockHeight*4), 
+          color: "white",
+          opacity: 1
+      });
+      award.add("tween");
+      award.animate({y: (blockHeight*3), opacity: 0},
+        1,
+        Q.Easing.Linear,
+        {callback: function() { this.destroy(); } });
+      stage.insert(award);
+
     });
   });
 
