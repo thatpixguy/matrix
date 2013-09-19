@@ -367,7 +367,7 @@ window.addEventListener("load",function() {
       }
 
       if(matches>0) {
-        Q.stage(3).trigger("addscore",Math.pow(matches-2,2));
+        Q.stage(3).trigger("addscore",{newScore:Math.pow(matches-2,2),message:"matched "+matches});
       }
 
       /*
@@ -438,20 +438,25 @@ window.addEventListener("load",function() {
       score = newScore;
       scoreText.p.label = "score: "+newScore;
     });
-    stage.on("addscore",function(newScore){
+    stage.on("addscore",function(data){
+      //newScore,_message,_x,_y){
+      var newScore = data["newScore"] || 0;
+      var message = data["message"] || "+"+newScore;
+      var x = data["x"] || (blockWidth*3)+blockOffset;
+      var y = data["y"] || (blockHeight*4);
       //console.log("addscore called "+newScore);
       score += newScore;
       //console.log("score:"+score);
       scoreText.p.label = "score: "+score;
       var award = new Q.UI.Text({ 
-        label: "+"+newScore, 
-          x: (blockWidth*3)+blockOffset, 
-          y: (blockHeight*4), 
-          color: "white",
+        label: message, 
+          x: x, 
+          y: y, 
+          color: "yellow",
           opacity: 1
       });
       award.add("tween");
-      award.animate({y: (blockHeight*3), opacity: 0},
+      award.animate({x: (blockWidth*3)+blockOffset, y: (blockHeight*3), opacity: 0},
         1,
         Q.Easing.Linear,
         {callback: function() { this.destroy(); } });
